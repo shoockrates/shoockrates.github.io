@@ -111,6 +111,7 @@
                 if (this.neighborMines[index] === 0) {
                     this.revealNeighbors(index);
                 }
+                this.checkWinCondition();
             }
         }
 
@@ -148,6 +149,17 @@
                 cell.classList.remove('flag');
                 cell.textContent = '';
             }
+        }
+
+        checkWinCondition() {
+            for (let i = 0; i < this.board.length; ++i) {
+                if (!this.board[i] && !this.revealed[i]) {
+                    return;
+                }
+            }
+
+            this.gameOver = true;
+            alert('You won! Congratulations!');
         }
     }
 
