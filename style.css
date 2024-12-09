@@ -1,0 +1,29 @@
+body {
+    caret-color: transparent;
+}
+
+#gameBoard {
+    border-collapse: collapse;
+    margin: 20px auto;
+}
+
+#gameBoard td {
+    width: 30px;
+    height: 30px;
+    text-align: center;
+    border: 1px solid #999;
+    cursor: pointer;
+    background-color: #ddd;
+}
+
+#gameBoard td.revealed {
+    background-color: #f0f0f0;
+}
+
+#gameBoard td.mine {
+    background-color: red;
+}
+
+#gameBoard td.flag {
+    background-color: yellow;
+}
