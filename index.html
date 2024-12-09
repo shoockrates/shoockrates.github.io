@@ -3,32 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>Minesweeper</title>
-    <style>
-        body {
-            caret-color: transparent;
-        }
-        #gameBoard {
-            border-collapse: collapse;
-            margin: 20px auto;
-        }
-        #gameBoard td {
-            width: 30px;
-            height: 30px;
-            text-align: center;
-            border: 1px solid #999;
-            cursor: pointer;
-            background-color: #ddd;
-        }
-        #gameBoard td.revealed {
-            background-color: #f0f0f0;
-        }
-        #gameBoard td.mine {
-            background-color: red;
-        }
-        #gameBoard td.flag {
-            background-color: yellow;
-        }
-    </style>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div id="game-container">
@@ -54,7 +29,7 @@
         }
 
         initializeBoard() {
-            for (let i = 0; i < this.size * this.size; i++) {
+            for (let row = 0; row < this.size * this.size; ++row) {
                 this.board.push(false);
                 this.revealed.push(false);
                 this.flags.push(false);
@@ -62,28 +37,28 @@
         }
 
         placeMines() {
-            for (let i = 0; i < this.size * this.size; i++) {
-                this.board[i] = Math.random() < this.minePercentage;
+            for (let cell = 0; cell < this.size * this.size; ++cell) {
+                this.board[cell] = Math.random() < this.minePercentage;
             }
         }
 
         calculateNeighborMines() {
             this.neighborMines = new Array(this.size * this.size).fill(0);
             
-            for (let row = 0; row < this.size; row++) {
-                for (let col = 0; col < this.size; col++) {
-                    const index = row * this.size + col;
+            for (let rowIndex = 0; rowIndex < this.size; ++rowIndex) {
+                for (let colIndex = 0; colIndex < this.size; ++colIndex) {
+                    const index = rowIndex * this.size + colIndex;
                     
                     if (this.board[index]) continue;
 
-                    for (let dx = -1; dx <= 1; dx++) {
-                        for (let dy = -1; dy <= 1; dy++) {
-                            const newRow = row + dx;
-                            const newCol = col + dy;
+                    for (let deltaX = -1; deltaX <= 1; ++deltaX) {
+                        for (let deltaY = -1; deltaY <= 1; ++deltaY) {
+                            const newRowIndex = rowIndex + deltaX;
+                            const newColIndex = colIndex + deltaY;
                             
-                            if (newRow >= 0 && newRow < this.size && 
-                                newCol >= 0 && newCol < this.size) {
-                                const neighborIndex = newRow * this.size + newCol;
+                            if (newRowIndex >= 0 && newRowIndex < this.size && 
+                                newColIndex >= 0 && newColIndex < this.size) {
+                                const neighborIndex = newRowIndex * this.size + newColIndex;
                                 if (this.board[neighborIndex]) {
                                     this.neighborMines[index]++;
                                 }
@@ -98,12 +73,12 @@
             const board = document.getElementById('gameBoard');
             board.innerHTML = '';
 
-            for (let row = 0; row < this.size; row++) {
+            for (let rowPosition = 0; rowPosition < this.size; ++rowPosition) {
                 const tr = document.createElement('tr');
                 
-                for (let col = 0; col < this.size; col++) {
+                for (let colPosition = 0; colPosition < this.size; ++colPosition) {
                     const td = document.createElement('td');
-                    const index = row * this.size + col;
+                    const index = rowPosition * this.size + colPosition;
 
                     td.dataset.index = index;
                     td.addEventListener('click', () => this.revealCell(index));
@@ -140,17 +115,17 @@
         }
 
         revealNeighbors(index) {
-            const row = Math.floor(index / this.size);
-            const col = index % this.size;
+            const rowPos = Math.floor(index / this.size);
+            const colPos = index % this.size;
 
-            for (let dx = -1; dx <= 1; dx++) {
-                for (let dy = -1; dy <= 1; dy++) {
-                    const newRow = row + dx;
-                    const newCol = col + dy;
+            for (let deltaX = -1; deltaX <= 1; ++deltaX) {
+                for (let deltaY = -1; deltaY <= 1; ++deltaY) {
+                    const newRowPos = rowPos + deltaX;
+                    const newColPos = colPos + deltaY;
                     
-                    if (newRow >= 0 && newRow < this.size && 
-                        newCol >= 0 && newCol < this.size) {
-                        const neighborIndex = newRow * this.size + newCol;
+                    if (newRowPos >= 0 && newRowPos < this.size && 
+                        newColPos >= 0 && newColPos < this.size) {
+                        const neighborIndex = newRowPos * this.size + newColPos;
                         
                         if (!this.revealed[neighborIndex]) {
                             this.revealCell(neighborIndex);
