@@ -1,27 +1,57 @@
+body {
+  background: linear-gradient(to right, #3498db, #29b97d);
+  font-family: "Arial", sans-serif;
+  margin: 0;
+  padding: 0;
+}
+
 #game-container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 50px;
+  gap: 10px;
 }
+
+#game-status {
+  font-size: 24px;
+  font-weight: bold;
+  color: #3a3131;
+}
+
 #gameBoard {
-    border-collapse: collapse;
+  border-collapse: collapse;
+  background: #ecf0f1;
+  border: 3px solid #2c3e50;
+  border-radius: 5px;
+  overflow: hidden;
 }
+
 #gameBoard td {
-    width: 30px;
-    height: 30px;
-    border: 1px solid #ccc;
-    text-align: center;
-    vertical-align: middle;
-    cursor: pointer;
-    user-select: none;
+  width: 35px;
+  height: 35px;
+  border: 1px solid #bdc3c7;
+  text-align: center;
+  vertical-align: middle;
+  cursor: pointer;
+  user-select: none;
+  font-weight: bold;
+  transition: all 0.2s ease;
 }
+
+#gameBoard td:hover {
+  background-color: #d5dbdb;
+}
+
 #gameBoard td.revealed {
-    background-color: #f0f0f0;
-    color: #333;
+  background-color: #e7e0e0;
 }
+
 #gameBoard td.mine {
-    background-color: red;
+  background-color: #e74c3c;
 }
+
 #gameBoard td.flag {
-    background-color: yellow;
+  background-color: #f1c40f;
 }
