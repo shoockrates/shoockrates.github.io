@@ -180,6 +180,11 @@
             }
         }
 
+        /**
+         * Checks if the game is won by iterating through all cells and checking if they are non-mined and not yet revealed.
+         * If all non-mined cells are revealed, the game is won and the game over flag is set to true. An alert is shown to the user.
+         * @returns {void} 
+         */
         checkWinCondition() {
             for (let i = 0; i < this.board.length; ++i) {
                 if (!this.board[i] && !this.revealed[i]) {
