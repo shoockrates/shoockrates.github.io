@@ -83,7 +83,7 @@ nav.navbar {
   justify-content: center;
   padding: 2rem;
   gap: 1.5rem;
-  margin-top: 80px;
+  margin-top: 10px;
   flex: 1;
 }
 
@@ -117,8 +117,8 @@ nav.navbar {
 }
 
 #gameBoard td {
-  width: 30px;
-  height: 30px;
+  width: 35px;
+  height: 35px;
   border: 1px solid rgba(0, 0, 0, 0.1);
   text-align: center;
   vertical-align: middle;
