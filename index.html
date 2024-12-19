@@ -21,187 +21,199 @@
     </div>
 
     <script>
-    class Minesweeper {
-        constructor(size = 9, minePercentage = 0.1) {
-            this.size = size;
-            this.minePercentage = minePercentage;
-            this.board = [];
-            this.mines = [];
-            this.revealed = [];
-            this.flags = [];
-            this.gameOver = false;
-            this.firstClick = true;
+        class Minesweeper {
+            constructor(size = 9, minePercentage = 0.1) {
+                this.size = size;
+                this.minePercentage = minePercentage;
+                this.board = [];
+                this.mines = [];
+                this.revealed = [];
+                this.flags = [];
+                this.gameOver = false;
+                this.firstClick = true;
 
-            this.initializeBoard();
-            this.renderBoard();
-        }
-
-        initializeBoard() {
-            for (let row = 0; row < this.size * this.size; ++row) {
-                this.board.push(false);
-                this.revealed.push(false);
-                this.flags.push(false);
+                this.initializeBoard();
+                this.renderBoard();
             }
-        }
 
-        placeMines(safeIndex) {
-            // Reset board to clear previous mines
-            this.board = new Array(this.size * this.size).fill(false);
-            
-            // Place mines, ensuring the safe index and its neighbors are not mined
-            const safeRow = Math.floor(safeIndex / this.size);
-            const safeCol = safeIndex % this.size;
-
-            let minesPlaced = 0;
-            const totalMines = Math.floor(this.size * this.size * this.minePercentage);
-
-            while (minesPlaced < totalMines) {
-                const randomIndex = Math.floor(Math.random() * (this.size * this.size));
-                
-                // Check if this cell is too close to the safe area or already a mine
-                if (!this.board[randomIndex]) {
-                    const randomRow = Math.floor(randomIndex / this.size);
-                    const randomCol = randomIndex % this.size;
-
-                    // Ensure mine is not in the safe area (3x3 grid around first click)
-                    if (Math.abs(randomRow - safeRow) > 1 || Math.abs(randomCol - safeCol) > 1) {
-                        this.board[randomIndex] = true;
-                        minesPlaced++;
-                    }
+            initializeBoard() {
+                for (let row = 0; row < this.size * this.size; ++row) {
+                    this.board.push(false);
+                    this.revealed.push(false);
+                    this.flags.push(false);
                 }
             }
 
-            this.calculateNeighborMines();
-        }
+            placeMines(safeIndex) {
+                // Reset board to clear previous mines
+                this.board = new Array(this.size * this.size).fill(false);
+                
+                // Place mines, ensuring the safe index and its neighbors are not mined
+                const safeRow = Math.floor(safeIndex / this.size);
+                const safeCol = safeIndex % this.size;
 
-        calculateNeighborMines() {
-            this.neighborMines = new Array(this.size * this.size).fill(0);
-            
-            for (let rowIndex = 0; rowIndex < this.size; ++rowIndex) {
-                for (let colIndex = 0; colIndex < this.size; ++colIndex) {
-                    const index = rowIndex * this.size + colIndex;
+                let minesPlaced = 0;
+                const totalMines = Math.floor(this.size * this.size * this.minePercentage);
+
+                while (minesPlaced < totalMines) {
+                    const randomIndex = Math.floor(Math.random() * (this.size * this.size));
                     
-                    if (this.board[index]) continue;
+                    // Check if this cell is too close to the safe area or already a mine
+                    if (!this.board[randomIndex]) {
+                        const randomRow = Math.floor(randomIndex / this.size);
+                        const randomCol = randomIndex % this.size;
 
-                    for (let deltaX = -1; deltaX <= 1; ++deltaX) {
-                        for (let deltaY = -1; deltaY <= 1; ++deltaY) {
-                            const newRowIndex = rowIndex + deltaX;
-                            const newColIndex = colIndex + deltaY;
-                            
-                            if (newRowIndex >= 0 && newRowIndex < this.size && 
-                                newColIndex >= 0 && newColIndex < this.size) {
-                                const neighborIndex = newRowIndex * this.size + newColIndex;
-                                if (this.board[neighborIndex]) {
-                                    this.neighborMines[index]++;
+                        // Ensure mine is not in the safe area (3x3 grid around first click)
+                        if (Math.abs(randomRow - safeRow) > 1 || Math.abs(randomCol - safeCol) > 1) {
+                            this.board[randomIndex] = true;
+                            minesPlaced++;
+                        }
+                    }
+                }
+
+                this.calculateNeighborMines();
+            }
+
+            calculateNeighborMines() {
+                this.neighborMines = new Array(this.size * this.size).fill(0);
+                
+                for (let rowIndex = 0; rowIndex < this.size; ++rowIndex) {
+                    for (let colIndex = 0; colIndex < this.size; ++colIndex) {
+                        const index = rowIndex * this.size + colIndex;
+                        
+                        if (this.board[index]) continue;
+
+                        for (let deltaX = -1; deltaX <= 1; ++deltaX) {
+                            for (let deltaY = -1; deltaY <= 1; ++deltaY) {
+                                const newRowIndex = rowIndex + deltaX;
+                                const newColIndex = colIndex + deltaY;
+                                
+                                if (newRowIndex >= 0 && newRowIndex < this.size && 
+                                    newColIndex >= 0 && newColIndex < this.size) {
+                                    const neighborIndex = newRowIndex * this.size + newColIndex;
+                                    if (this.board[neighborIndex]) {
+                                        this.neighborMines[index]++;
+                                    }
                                 }
                             }
                         }
                     }
                 }
             }
-        }
 
-        renderBoard() {
-            const board = document.getElementById('gameBoard');
-            board.innerHTML = '';
+            renderBoard() {
+                const board = document.getElementById('gameBoard');
+                board.innerHTML = '';
 
-            for (let rowPosition = 0; rowPosition < this.size; ++rowPosition) {
-                const tr = document.createElement('tr');
-                
-                for (let colPosition = 0; colPosition < this.size; ++colPosition) {
-                    const td = document.createElement('td');
-                    const index = rowPosition * this.size + colPosition;
-
-                    td.dataset.index = index;
-                    td.addEventListener('click', () => this.revealCell(index));
-                    td.addEventListener('contextmenu', (e) => {
-                        e.preventDefault();
-                        this.toggleFlag(index);
-                    });
-
-                    tr.appendChild(td);
-                }
-                
-                board.appendChild(tr);
-            }
-        }
-
-        revealCell(index) {
-            if (this.gameOver || this.revealed[index] || this.flags[index]) return;
-
-            // Place mines only on first click, ensuring a safe first click
-            if (this.firstClick) {
-                this.placeMines(index);
-                this.firstClick = false;
-            }
-
-            this.revealed[index] = true;
-            const cell = document.querySelector(`[data-index="${index}"]`);
-
-            if (this.board[index]) {
-                cell.textContent = '💣'
-                cell.classList.add('mine');
-                this.gameOver = true;
-                alert('Game Over! You hit a mine.');
-            } else {
-                cell.classList.add('revealed');
-                cell.textContent = this.neighborMines[index] || '';
-
-                if (this.neighborMines[index] === 0) {
-                    this.revealNeighbors(index);
-                }
-                this.checkWinCondition();
-            }
-        }
-
-        revealNeighbors(index) {
-            const rowPos = Math.floor(index / this.size);
-            const colPos = index % this.size;
-
-            for (let deltaX = -1; deltaX <= 1; ++deltaX) {
-                for (let deltaY = -1; deltaY <= 1; ++deltaY) {
-                    const newRowPos = rowPos + deltaX;
-                    const newColPos = colPos + deltaY;
+                for (let rowPosition = 0; rowPosition < this.size; ++rowPosition) {
+                    const tr = document.createElement('tr');
                     
-                    if (newRowPos >= 0 && newRowPos < this.size && 
-                        newColPos >= 0 && newColPos < this.size) {
-                        const neighborIndex = newRowPos * this.size + newColPos;
+                    for (let colPosition = 0; colPosition < this.size; ++colPosition) {
+                        const td = document.createElement('td');
+                        const index = rowPosition * this.size + colPosition;
+
+                        td.dataset.index = index;
+                        td.addEventListener('click', () => this.revealCell(index));
+                        td.addEventListener('contextmenu', (e) => {
+                            e.preventDefault();
+                            this.toggleFlag(index);
+                        });
+
+                        tr.appendChild(td);
+                    }
+                    
+                    board.appendChild(tr);
+                }
+            }
+
+            revealAllMines() {
+                for (let i = 0; i < this.board.length; i++) {
+                    if (this.board[i]) {
+                        const cell = document.querySelector(`[data-index="${i}"]`);
+                        cell.textContent = '💣';
+                        cell.classList.add('mine');
+                    }
+                }
+            }
+
+            revealCell(index) {
+                if (this.gameOver || this.revealed[index] || this.flags[index]) return;
+
+                // Place mines only on first click, ensuring a safe first click
+                if (this.firstClick) {
+                    this.placeMines(index);
+                    this.firstClick = false;
+                }
+
+                this.revealed[index] = true;
+                const cell = document.querySelector(`[data-index="${index}"]`);
+
+                if (this.board[index]) {
+                    cell.textContent = '💣'
+                    cell.classList.add('mine');
+                    this.gameOver = true;
+                    this.revealAllMines(); // Reveal all mines when one is hit
+                    alert('Game Over! You hit a mine.');
+                } else {
+                    cell.classList.add('revealed');
+                    cell.textContent = this.neighborMines[index] || '';
+
+                    if (this.neighborMines[index] === 0) {
+                        this.revealNeighbors(index);
+                    }
+                    this.checkWinCondition();
+                }
+            }
+
+            revealNeighbors(index) {
+                const rowPos = Math.floor(index / this.size);
+                const colPos = index % this.size;
+
+                for (let deltaX = -1; deltaX <= 1; ++deltaX) {
+                    for (let deltaY = -1; deltaY <= 1; ++deltaY) {
+                        const newRowPos = rowPos + deltaX;
+                        const newColPos = colPos + deltaY;
                         
-                        if (!this.revealed[neighborIndex]) {
-                            this.revealCell(neighborIndex);
+                        if (newRowPos >= 0 && newRowPos < this.size && 
+                            newColPos >= 0 && newColPos < this.size) {
+                            const neighborIndex = newRowPos * this.size + newColPos;
+                            
+                            if (!this.revealed[neighborIndex]) {
+                                this.revealCell(neighborIndex);
+                            }
                         }
                     }
                 }
             }
-        }
 
-        toggleFlag(index) {
-            if (this.gameOver || this.revealed[index]) return;
+            toggleFlag(index) {
+                if (this.gameOver || this.revealed[index]) return;
 
-            this.flags[index] = !this.flags[index];
-            const cell = document.querySelector(`[data-index="${index}"]`);
-            
-            if (this.flags[index]) {
-                cell.classList.add('flag');
-                cell.textContent = '🚩';
-            } else {
-                cell.classList.remove('flag');
-                cell.textContent = '';
-            }
-        }
-        checkWinCondition() {
-            for (let i = 0; i < this.board.length; ++i) {
-                if (!this.board[i] && !this.revealed[i]) {
-                    return;
+                this.flags[index] = !this.flags[index];
+                const cell = document.querySelector(`[data-index="${index}"]`);
+                
+                if (this.flags[index]) {
+                    cell.classList.add('flag');
+                    cell.textContent = '🚩';
+                } else {
+                    cell.classList.remove('flag');
+                    cell.textContent = '';
                 }
             }
 
-            this.gameOver = true;
-            alert('You won! Congratulations!');
-        }
-    }
+            checkWinCondition() {
+                for (let i = 0; i < this.board.length; ++i) {
+                    if (!this.board[i] && !this.revealed[i]) {
+                        return;
+                    }
+                }
 
-    new Minesweeper();
+                this.gameOver = true;
+                alert('You won! Congratulations!');
+            }
+        }
+
+        new Minesweeper();
     </script>
 </body>
 </html>
