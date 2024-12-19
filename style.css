@@ -7,6 +7,14 @@ body {
   color: #ffffff;
   display: flex;
   flex-direction: column;
+  animation: gradientBG 15s ease infinite;
+  background-size: 400% 400%;
+}
+
+@keyframes gradientBG {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
 }
 
 nav.navbar {
@@ -46,6 +54,7 @@ nav.navbar {
   font-weight: 500;
   position: relative;
   padding: 0.5rem 0;
+  transition: color 0.3s ease;
 }
 
 .navbar-links a::after {
@@ -59,6 +68,10 @@ nav.navbar {
   transition: width 0.3s ease;
 }
 
+.navbar-links a:hover {
+  color: #fdbb2d;
+}
+
 .navbar-links a:hover::after {
   width: 100%;
 }
@@ -70,87 +83,127 @@ nav.navbar {
   justify-content: center;
   padding: 2rem;
   gap: 1.5rem;
-  margin-top: 80px; /* Added to account for fixed navbar */
+  margin-top: 80px;
   flex: 1;
 }
 
 #game-status {
-  font-size: 2rem;
+  font-size: 2.5rem;
   font-weight: 700;
   color: white;
   text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
-  margin-bottom: 0.1rem;
+  margin-bottom: 0.5rem;
+  text-align: center;
+  animation: fadeIn 0.5s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-20px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 #gameBoard {
   border-collapse: collapse;
-  background: rgba(255, 255, 255, 0.9);
+  background: rgba(255, 255, 255, 0.95);
   border: 3px solid rgba(0, 0, 0, 0.2);
   border-radius: 12px;
   overflow: hidden;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease;
+}
+
+#gameBoard:hover {
+  transform: translateY(-5px);
 }
 
 #gameBoard td {
-  width: 35px;
-  height: 35px;
+  width: 30px;
+  height: 30px;
   border: 1px solid rgba(0, 0, 0, 0.1);
   text-align: center;
   vertical-align: middle;
   cursor: pointer;
   user-select: none;
   font-weight: 600;
-  font-size: 1.1rem;
+  font-size: 1.2rem;
   transition: all 0.2s ease;
+  background: rgba(255, 255, 255, 0.7);
 }
 
 #gameBoard td:hover {
-  background-color: rgba(0, 0, 0, 0.05);
+  background-color: rgba(253, 187, 45, 0.2);
   transform: scale(1.05);
+  z-index: 1;
 }
 
 #gameBoard td.revealed {
   background-color: #f8f9fa;
   color: #2c3e50;
+  box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.1);
 }
 
 #gameBoard td.mine {
   background-color: #ff4757;
-  animation: shake 0.5s ease-in-out;
+  animation: explode 0.5s ease-in-out;
+}
+
+@keyframes explode {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.2); }
+  100% { transform: scale(1); }
 }
 
 #gameBoard td.flag {
   background-color: #ffd32a;
+  animation: flagPlant 0.3s ease-out;
 }
 
-/* Number colors */
-#gameBoard td.revealed[data-mines="1"] { color: #3498db; }
-#gameBoard td.revealed[data-mines="2"] { color: #2ecc71; }
-#gameBoard td.revealed[data-mines="3"] { color: #e74c3c; }
-#gameBoard td.revealed[data-mines="4"] { color: #8e44ad; }
-#gameBoard td.revealed[data-mines="5"] { color: #c0392b; }
-#gameBoard td.revealed[data-mines="6"] { color: #16a085; }
-#gameBoard td.revealed[data-mines="7"] { color: #2c3e50; }
-#gameBoard td.revealed[data-mines="8"] { color: #7f8c8d; }
-
-@keyframes shake {
-  0%, 100% { transform: translateX(0); }
-  25% { transform: translateX(-5px); }
-  75% { transform: translateX(5px); }
+@keyframes flagPlant {
+  0% { transform: translateY(-5px); opacity: 0; }
+  100% { transform: translateY(0); opacity: 1; }
 }
+
+#gameBoard td[textContent="1"] { color: #2980b9; }
+#gameBoard td[textContent="2"] { color: #27ae60; }
+#gameBoard td[textContent="3"] { color: #c0392b; }
+#gameBoard td[textContent="4"] { color: #8e44ad; }
+#gameBoard td[textContent="5"] { color: #d35400; }
+#gameBoard td[textContent="6"] { color: #16a085; }
+#gameBoard td[textContent="7"] { color: #2c3e50; }
+#gameBoard td[textContent="8"] { color: #7f8c8d; }
 
 @media (max-width: 768px) {
   #gameBoard td {
-    width: 35px;
-    height: 35px;
+    width: 20px;
+    height: 20px;
     font-size: 1rem;
   }
   
   .navbar {
-    padding: 1rem;
+    padding: 0.5rem;
   }
   
   .navbar-links {
     gap: 1rem;
+  }
+  
+  #game-status {
+    font-size: 2rem;
+  }
+}
+
+@media (max-width: 480px) {
+  #gameBoard td {
+    width: 20px;
+    height: 20px;
+    font-size: 0.9rem;
+  }
+  
+  .navbar-logo {
+    font-size: 1.5rem;
+  }
+  
+  .navbar-links a {
+    font-size: 1rem;
   }
 }
