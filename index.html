@@ -130,6 +130,7 @@
             const cell = document.querySelector(`[data-index="${index}"]`);
 
             if (this.board[index]) {
+                cell.textContent = '💣'
                 cell.classList.add('mine');
                 this.gameOver = true;
                 alert('Game Over! You hit a mine.');
