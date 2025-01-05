@@ -1,219 +1,390 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
+  <head>
+    <meta charset="UTF-8" />
     <title>Minesweeper</title>
-    <link rel="stylesheet" href="style.css">
-</head>
-<body>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+
+  <body>
     <nav class="navbar">
-        <div class="navbar-logo">Minesweeper</div>
-        <ul class="navbar-links">
-            <li><a href="">Play</a></li>
-            <li><a href="leaderboard.html">Leaderboard</a></li>
-            <li><a href="matches.html">Matches</a></li>
-        </ul>
+      <div class="navbar-logo">Minesweeper</div>
+      <ul class="navbar-links">
+        <li><a href="/">Play</a></li>
+        <li><a href="/leaderboard.html">Leaderboard</a></li>
+        <li><a href="/matches.html">Matches</a></li>
+      </ul>
     </nav>
-    
+
     <div id="game-container">
-        <div id="game-status">Minesweeper</div>
-        <table id="gameBoard"></table>
+      <div id="game-status">Minesweeper</div>
+      <div id="timer">Time: 0:00</div>
+      <table id="gameBoard"></table>
+    </div>
+
+    <div id="scoreModal" class="modal">
+      <div class="modal-content">
+        <button onclick="closeModal()" class="close">X</button>
+        <h2 id="gameResult">Congratulations!</h2>
+        <p id="finalTime"></p>
+        <div class="form-group">
+          <label for="playerName">Enter your name:</label>
+          <input type="text" id="playerName" required />
+        </div>
+        <button onclick="submitScore()" class="submit">Submit Score</button>
+      </div>
     </div>
 
     <script>
-        class Minesweeper {
-            constructor(size = 9, minePercentage = 0.1) {
-                this.size = size;
-                this.minePercentage = minePercentage;
-                this.board = [];
-                this.mines = [];
-                this.revealed = [];
-                this.flags = [];
-                this.gameOver = false;
-                this.firstClick = true;
+      class Minesweeper {
+        constructor(size = 9, minePercentage = 0.1) {
+          this.size = size;
+          this.minePercentage = minePercentage;
+          this.board = [];
+          this.mines = [];
+          this.revealed = [];
+          this.flags = [];
+          this.gameOver = false;
+          this.firstClick = true;
 
-                this.initializeBoard();
-                this.renderBoard();
-            }
-
-            initializeBoard() {
-                for (let row = 0; row < this.size * this.size; ++row) {
-                    this.board.push(false);
-                    this.revealed.push(false);
-                    this.flags.push(false);
-                }
-            }
-
-            placeMines(safeIndex) {
-                // Reset board to clear previous mines
-                this.board = new Array(this.size * this.size).fill(false);
-                
-                // Place mines, ensuring the safe index and its neighbors are not mined
-                const safeRow = Math.floor(safeIndex / this.size);
-                const safeCol = safeIndex % this.size;
-
-                let minesPlaced = 0;
-                const totalMines = Math.floor(this.size * this.size * this.minePercentage);
-
-                while (minesPlaced < totalMines) {
-                    const randomIndex = Math.floor(Math.random() * (this.size * this.size));
-                    
-                    // Check if this cell is too close to the safe area or already a mine
-                    if (!this.board[randomIndex]) {
-                        const randomRow = Math.floor(randomIndex / this.size);
-                        const randomCol = randomIndex % this.size;
-
-                        // Ensure mine is not in the safe area (3x3 grid around first click)
-                        if (Math.abs(randomRow - safeRow) > 1 || Math.abs(randomCol - safeCol) > 1) {
-                            this.board[randomIndex] = true;
-                            minesPlaced++;
-                        }
-                    }
-                }
-
-                this.calculateNeighborMines();
-            }
-
-            calculateNeighborMines() {
-                this.neighborMines = new Array(this.size * this.size).fill(0);
-                
-                for (let rowIndex = 0; rowIndex < this.size; ++rowIndex) {
-                    for (let colIndex = 0; colIndex < this.size; ++colIndex) {
-                        const index = rowIndex * this.size + colIndex;
-                        
-                        if (this.board[index]) continue;
-
-                        for (let deltaX = -1; deltaX <= 1; ++deltaX) {
-                            for (let deltaY = -1; deltaY <= 1; ++deltaY) {
-                                const newRowIndex = rowIndex + deltaX;
-                                const newColIndex = colIndex + deltaY;
-                                
-                                if (newRowIndex >= 0 && newRowIndex < this.size && 
-                                    newColIndex >= 0 && newColIndex < this.size) {
-                                    const neighborIndex = newRowIndex * this.size + newColIndex;
-                                    if (this.board[neighborIndex]) {
-                                        this.neighborMines[index]++;
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-
-            renderBoard() {
-                const board = document.getElementById('gameBoard');
-                board.innerHTML = '';
-
-                for (let rowPosition = 0; rowPosition < this.size; ++rowPosition) {
-                    const tr = document.createElement('tr');
-                    
-                    for (let colPosition = 0; colPosition < this.size; ++colPosition) {
-                        const td = document.createElement('td');
-                        const index = rowPosition * this.size + colPosition;
-
-                        td.dataset.index = index;
-                        td.addEventListener('click', () => this.revealCell(index));
-                        td.addEventListener('contextmenu', (e) => {
-                            e.preventDefault();
-                            this.toggleFlag(index);
-                        });
-
-                        tr.appendChild(td);
-                    }
-                    
-                    board.appendChild(tr);
-                }
-            }
-
-            revealAllMines() {
-                for (let i = 0; i < this.board.length; i++) {
-                    if (this.board[i]) {
-                        const cell = document.querySelector(`[data-index="${i}"]`);
-                        cell.textContent = '💣';
-                        cell.classList.add('mine');
-                    }
-                }
-            }
-
-            revealCell(index) {
-                if (this.gameOver || this.revealed[index] || this.flags[index]) return;
-
-                // Place mines only on first click, ensuring a safe first click
-                if (this.firstClick) {
-                    this.placeMines(index);
-                    this.firstClick = false;
-                }
-
-                this.revealed[index] = true;
-                const cell = document.querySelector(`[data-index="${index}"]`);
-
-                if (this.board[index]) {
-                    cell.textContent = '💣'
-                    cell.classList.add('mine');
-                    this.gameOver = true;
-                    this.revealAllMines(); // Reveal all mines when one is hit
-                    alert('Game Over! You hit a mine.');
-                } else {
-                    cell.classList.add('revealed');
-                    cell.textContent = this.neighborMines[index] || '';
-
-                    if (this.neighborMines[index] === 0) {
-                        this.revealNeighbors(index);
-                    }
-                    this.checkWinCondition();
-                }
-            }
-
-            revealNeighbors(index) {
-                const rowPos = Math.floor(index / this.size);
-                const colPos = index % this.size;
-
-                for (let deltaX = -1; deltaX <= 1; ++deltaX) {
-                    for (let deltaY = -1; deltaY <= 1; ++deltaY) {
-                        const newRowPos = rowPos + deltaX;
-                        const newColPos = colPos + deltaY;
-                        
-                        if (newRowPos >= 0 && newRowPos < this.size && 
-                            newColPos >= 0 && newColPos < this.size) {
-                            const neighborIndex = newRowPos * this.size + newColPos;
-                            
-                            if (!this.revealed[neighborIndex]) {
-                                this.revealCell(neighborIndex);
-                            }
-                        }
-                    }
-                }
-            }
-
-            toggleFlag(index) {
-                if (this.gameOver || this.revealed[index]) return;
-
-                this.flags[index] = !this.flags[index];
-                const cell = document.querySelector(`[data-index="${index}"]`);
-                
-                if (this.flags[index]) {
-                    cell.classList.add('flag');
-                    cell.textContent = '🚩';
-                } else {
-                    cell.classList.remove('flag');
-                    cell.textContent = '';
-                }
-            }
-
-            checkWinCondition() {
-                for (let i = 0; i < this.board.length; ++i) {
-                    if (!this.board[i] && !this.revealed[i]) {
-                        return;
-                    }
-                }
-
-                this.gameOver = true;
-                alert('You won! Congratulations!');
-            }
+          this.initializeBoard();
+          this.renderBoard();
+          this.setupTimer();
         }
 
-        new Minesweeper();
+        setupTimer() {
+          this.timerDisplay = document.getElementById("timer");
+          this.updateTimer = this.updateTimer.bind(this);
+        }
+
+        startTimer() {
+          if (!this.startTime) {
+            this.elapsedSeconds = 0;
+            this.startTime = new Date();
+
+            this.timerInterval = setInterval(this.updateTimer, 1000);
+          }
+        }
+
+        stopTimer() {
+          if (this.timerInterval) {
+            clearInterval(this.timerInterval);
+            this.timerInterval = null;
+          }
+        }
+
+        updateTimer() {
+          const now = new Date();
+          this.elapsedSeconds = Math.floor((now - this.startTime) / 1000);
+          const minutes = Math.floor(this.elapsedSeconds / 60);
+          const seconds = this.elapsedSeconds % 60;
+          this.timerDisplay.textContent = `Time: ${minutes}:${seconds
+            .toString()
+            .padStart(2, "0")}`;
+        }
+
+        initializeBoard() {
+          for (let row = 0; row < this.size * this.size; ++row) {
+            this.board.push(false);
+            this.revealed.push(false);
+            this.flags.push(false);
+          }
+        }
+
+        placeMines(safeIndex) {
+          // Reset board to clear previous mines
+          this.board = new Array(this.size * this.size).fill(false);
+
+          // Place mines, ensuring the safe index and its neighbors are not mined
+          const safeRow = Math.floor(safeIndex / this.size);
+          const safeCol = safeIndex % this.size;
+
+          let minesPlaced = 0;
+          const totalMines = Math.floor(
+            this.size * this.size * this.minePercentage
+          );
+
+          while (minesPlaced < totalMines) {
+            const randomIndex = Math.floor(
+              Math.random() * (this.size * this.size)
+            );
+
+            // Check if this cell is too close to the safe area or already a mine
+            if (!this.board[randomIndex]) {
+              const randomRow = Math.floor(randomIndex / this.size);
+              const randomCol = randomIndex % this.size;
+
+              // Ensure mine is not in the safe area (3x3 grid around first click)
+              if (
+                Math.abs(randomRow - safeRow) > 1 ||
+                Math.abs(randomCol - safeCol) > 1
+              ) {
+                this.board[randomIndex] = true;
+                minesPlaced++;
+              }
+            }
+          }
+
+          this.calculateNeighborMines();
+        }
+
+        calculateNeighborMines() {
+          this.neighborMines = new Array(this.size * this.size).fill(0);
+
+          for (let rowIndex = 0; rowIndex < this.size; ++rowIndex) {
+            for (let colIndex = 0; colIndex < this.size; ++colIndex) {
+              const index = rowIndex * this.size + colIndex;
+
+              if (this.board[index]) continue;
+
+              for (let deltaX = -1; deltaX <= 1; ++deltaX) {
+                for (let deltaY = -1; deltaY <= 1; ++deltaY) {
+                  const newRowIndex = rowIndex + deltaX;
+                  const newColIndex = colIndex + deltaY;
+
+                  if (
+                    newRowIndex >= 0 &&
+                    newRowIndex < this.size &&
+                    newColIndex >= 0 &&
+                    newColIndex < this.size
+                  ) {
+                    const neighborIndex = newRowIndex * this.size + newColIndex;
+                    if (this.board[neighborIndex]) {
+                      this.neighborMines[index]++;
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+
+        renderBoard() {
+          const board = document.getElementById("gameBoard");
+          board.innerHTML = "";
+
+          for (let rowPosition = 0; rowPosition < this.size; ++rowPosition) {
+            const tr = document.createElement("tr");
+
+            for (let colPosition = 0; colPosition < this.size; ++colPosition) {
+              const td = document.createElement("td");
+              const index = rowPosition * this.size + colPosition;
+
+              td.dataset.index = index;
+              td.addEventListener("click", () => this.revealCell(index));
+              td.addEventListener("contextmenu", (e) => {
+                e.preventDefault();
+                this.toggleFlag(index);
+              });
+
+              tr.appendChild(td);
+            }
+
+            board.appendChild(tr);
+          }
+        }
+
+        revealAllMines() {
+          for (let i = 0; i < this.board.length; i++) {
+            if (this.board[i]) {
+              const cell = document.querySelector(`[data-index="${i}"]`);
+              cell.textContent = "💣";
+              cell.classList.add("mine");
+            }
+          }
+        }
+
+        revealCell(index) {
+          if (this.gameOver || this.revealed[index] || this.flags[index])
+            return;
+
+          if (this.firstClick) {
+            this.placeMines(index);
+            this.firstClick = false;
+            this.startTimer();
+          }
+
+          this.revealed[index] = true;
+          const cell = document.querySelector(`[data-index="${index}"]`);
+
+          if (this.board[index]) {
+            cell.textContent = "💣";
+            cell.classList.add("mine");
+            this.gameOver = true;
+            this.gameWon = false;
+            this.stopTimer();
+            this.revealAllMines();
+            setTimeout(() => {
+              this.showScoreModal(false);
+            }, 1300);
+          } else {
+            cell.classList.add("revealed");
+            cell.textContent = this.neighborMines[index] || "";
+
+            if (this.neighborMines[index] === 0) {
+              this.revealNeighbors(index);
+            }
+            this.checkWinCondition();
+          }
+        }
+
+        checkWinCondition() {
+          for (let i = 0; i < this.board.length; ++i) {
+            if (!this.board[i] && !this.revealed[i]) {
+              return;
+            }
+          }
+
+          this.gameOver = true;
+          this.gameWon = true;
+          this.stopTimer();
+          setTimeout(() => {
+            this.showScoreModal(true);
+          }, 1300);
+        }
+
+        showScoreModal(won) {
+          const modal = document.getElementById("scoreModal");
+          const gameResult = document.getElementById("gameResult");
+          const finalTime = document.getElementById("finalTime");
+
+          gameResult.textContent = won ? "Congratulations!" : "Game Over!";
+          gameResult.style.color = won ? "#4CAF50" : "#ff4757";
+
+          const minutes = Math.floor(this.elapsedSeconds / 60);
+          const seconds = (this.elapsedSeconds % 60)
+            .toString()
+            .padStart(2, "0");
+
+          finalTime.textContent = `Your time: ${minutes}:${seconds}`;
+          modal.style.display = "flex";
+          requestAnimationFrame(() => {
+            modal.classList.add("show");
+          });
+        }
+
+        revealNeighbors(index) {
+          const rowPos = Math.floor(index / this.size);
+          const colPos = index % this.size;
+
+          for (let deltaX = -1; deltaX <= 1; ++deltaX) {
+            for (let deltaY = -1; deltaY <= 1; ++deltaY) {
+              const newRowPos = rowPos + deltaX;
+              const newColPos = colPos + deltaY;
+
+              if (
+                newRowPos >= 0 &&
+                newRowPos < this.size &&
+                newColPos >= 0 &&
+                newColPos < this.size
+              ) {
+                const neighborIndex = newRowPos * this.size + newColPos;
+
+                if (!this.revealed[neighborIndex]) {
+                  this.revealCell(neighborIndex);
+                }
+              }
+            }
+          }
+        }
+
+        toggleFlag(index) {
+          if (this.gameOver || this.revealed[index]) return;
+
+          this.flags[index] = !this.flags[index];
+          const cell = document.querySelector(`[data-index="${index}"]`);
+
+          if (this.flags[index]) {
+            cell.classList.add("flag");
+            cell.textContent = "🚩";
+          } else {
+            cell.classList.remove("flag");
+            cell.textContent = "";
+          }
+        }
+
+        getBoardData() {
+          return {
+            size: this.size,
+            minePercentage: this.minePercentage,
+            board: this.board,
+            revealed: this.revealed,
+            flags: this.flags,
+          };
+        }
+      }
+
+      let game = new Minesweeper();
+
+      async function closeModal() {
+        const modal = document.getElementById("scoreModal");
+        modal.classList.remove("show");
+        setTimeout(() => {
+          modal.style.display = "none";
+        }, 300);
+        document.getElementById("timer").innerText = "Time: 0:00";
+        game = new Minesweeper();
+      }
+      async function submitScore() {
+        const playerName = document.getElementById("playerName").value.trim();
+        if (!playerName) {
+          alert("Please enter your name");
+          return;
+        }
+        // We will disallow commas.
+        const sanitizedPlayerName = playerName.replace(/,/g, "");
+        const boardData = game.getBoardData();
+        const boardFlat = boardData.board
+          .map((cell) => (cell ? 1 : 0))
+          .join(",");
+        const revealedFlat = boardData.revealed
+          .map((cell) => (cell ? 1 : 0))
+          .join(",");
+        const flagsFlat = boardData.flags
+          .map((cell) => (cell ? 1 : 0))
+          .join(",");
+        const gameWon = game.gameWon ? 1 : 0;
+
+        const gameData = [
+          sanitizedPlayerName,
+          game.elapsedSeconds,
+          new Date().toISOString(),
+          gameWon,
+          boardData.size,
+          boardData.minePercentage,
+          boardFlat,
+          revealedFlat,
+          flagsFlat,
+        ];
+
+        const csvData = gameData.join(",");
+
+        try {
+          const response = await fetch("http://rokoserveris.gw.lt:8080/", {
+            method: "POST",
+            headers: {
+              "Content-Type": "text/csv",
+            },
+            body: csvData,
+          });
+
+          if (response.ok) {
+            alert("Score submitted successfully!");
+            const modal = document.getElementById("scoreModal");
+            modal.classList.remove("show");
+            setTimeout(() => {
+              modal.style.display = "none";
+            }, 300);
+            document.getElementById("timer").innerText = "Time: 0:00";
+            game = new Minesweeper();
+          } else {
+            throw new Error("Failed to submit score");
+          }
+        } catch (error) {
+          alert("Error submitting score. Please try again.");
+          console.error("Error:", error);
+        }
+      }
     </script>
-</body>
+  </body>
 </html>
